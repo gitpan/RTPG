@@ -23,11 +23,11 @@ RTPG - is a module for accessing to rtorrent's SCGI functions.
 
 =head1 VERSION
 
-0.1.0
+0.1.1
 
 =cut
 
-our $VERSION=0.1;
+our $VERSION="0.1.1";
 
 =head1 SYNOPSIS
 
@@ -533,8 +533,9 @@ sub _normalize_one_torrent_info($)
 
 =head1 AUTHORS
 
- Copyright (C) 2008 Dmitry E. Oboukhov <unera@debian.org>
- Copyright (C) 2008 Nikolaev Roman <rshadow@rambler.ru>
+Copyright (C) 2008 Dmitry E. Oboukhov <unera@debian.org>,
+
+Copyright (C) 2008 Nikolaev Roman <rshadow@rambler.ru>
 
 =head1 LICENSE
 

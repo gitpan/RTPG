@@ -1,11 +1,19 @@
 #!/usr/bin/perl
 
 use utf8;
+package RTPG::Direct;
 
 =head1 NAME
 
 RTPG::Direct - is a driver for L<RTPG>.
 
+=head1 VERSION
+
+0.1.1
+
+=cut
+
+our $VERSION="0.1.1"
 
 =head1 SYNOPSIS
 
@@ -27,8 +35,9 @@ B<send_request> method.
 
 =head1 AUTHORS
 
- Copyright (C) 2008 Dmitry E. Oboukhov <unera@debian.org>
- Copyright (C) 2008 Nikolaev Roman <rshadow@rambler.ru>
+Copyright (C) 2008 Dmitry E. Oboukhov <unera@debian.org>,
+
+Copyright (C) 2008 Nikolaev Roman <rshadow@rambler.ru>
 
 =head1 LICENSE
 
@@ -48,7 +57,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 =cut
 
 
-package RTPG::Direct;
 use Carp;
 use RPC::XML;
 use RPC::XML::Parser;
