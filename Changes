@@ -1,6 +1,6 @@
-0.1.1
+0.1
 	Added Changes
 	Fixed version number for cpan
 
-0.2
-    Bumped version.
+0.3
+    Added set_files_priorities method

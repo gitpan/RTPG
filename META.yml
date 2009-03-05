@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                RTPG
-version:             0.2.0
+version:             0.3
 abstract:            is a module for accessing to rtorrent's SCGI functions.
 license:             ~
 author:              

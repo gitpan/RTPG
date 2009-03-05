@@ -23,11 +23,11 @@ RTPG - is a module for accessing to rtorrent's SCGI functions.
 
 =head1 VERSION
 
-0.2.0
+0.3
 
 =cut
 
-our $VERSION="0.2.0";
+our $VERSION=0.3;
 
 =head1 SYNOPSIS
 
@@ -350,6 +350,30 @@ sub file_list
     }
     return $list, '' if wantarray;
     return $list;
+}
+
+=head2 set_files_priorities(tid, pri)
+
+This method updates priorities of all files in one torrent
+
+=head3 EXAMPLE
+ 
+ # standard version
+ my $error=$h->set_files_priorities($tid, $pri);
+ my ($error)=$h->set_files_priorities($tid, $pri);
+
+ # died version
+ $h->set_files_priorities($tid, $pri);
+
+=cut
+sub set_files_priorities
+{
+    my ($self, $id, $pri)=@_;
+    my ($list, $error) =
+        $self->rpc_command('f.multicall', $id, '', "f.set_priority=$pri");
+    return $error if defined wantarray;
+    die $error if $error;
+    return undef;
 }
 
 =head2 system_information
