@@ -4,3 +4,6 @@
 
 0.3
     Added set_files_priorities method
+
+0.4
+    It works with rtorrent 0.8.5

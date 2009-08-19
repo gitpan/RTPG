@@ -27,7 +27,7 @@ RTPG - is a module for accessing to rtorrent's SCGI functions.
 
 =cut
 
-our $VERSION=0.3;
+our $VERSION=0.4;
 
 =head1 SYNOPSIS
 
@@ -190,11 +190,11 @@ This method returns list of torrents. It is a link to array of hashes.
 =cut
 sub torrents_list
 {
-	my ($self, $view)=@_;
-	$view||='default';
+    my ($self, $view)=@_;
+    $view||='default';
 
-	my @iary=eval {
-        grep { $_ ne 'd.get_mode' }
+    my @iary=eval {
+        grep !/^d\.(get_mode|get_custom.*|get_bitfield)$/,
         grep /^d\.(get_|is_)/, $self->_get_list_methods;
     };
 
