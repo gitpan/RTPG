@@ -7,3 +7,6 @@
 
 0.4
     It works with rtorrent 0.8.5
+
+0.5
+    API XML::Parser was changed, fixed.

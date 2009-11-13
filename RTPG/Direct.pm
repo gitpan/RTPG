@@ -13,7 +13,7 @@ RTPG::Direct - is a driver for L<RTPG>.
 
 =cut
 
-our $VERSION=0.3;
+our $VERSION=0.4;
 
 =head1 SYNOPSIS
 
@@ -28,7 +28,7 @@ our $VERSION=0.3;
 The module uses the L<IO::Socket::UNIX> or the L<IO::Socket::INET>
 modules for making connection.
 
-The returned data are recognizing with help of the L<RPC::XML::Parser>.
+The returned data are recognizing with help of the L<RPC::XML::ParserFactory>.
 
 The method B<send_request> works just like the L<RPC::XML::Client>'s
 B<send_request> method.
@@ -59,7 +59,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use Carp;
 use RPC::XML;
-use RPC::XML::Parser;
+use RPC::XML::ParserFactory;
 use XML::Parser;
 use RPC::XML::Client;
 use Encode qw(decode encode);
@@ -113,7 +113,7 @@ sub send_request
     
     my $response; { local $/; $response = <$c> };
     $response=(split /\n\s?\n/, $response, 2)[1];
-    my $result=RPC::XML::Parser->new()->parse($response);
+    my $result=RPC::XML::ParserFactory->new()->parse($response);
 
     return $result->{value} if 'RPC::XML::fault' eq ref $result->{value};
     return $result->{value};
