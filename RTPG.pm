@@ -27,7 +27,7 @@ RTPG - is a module for accessing to rtorrent's SCGI functions.
 
 =cut
 
-our $VERSION=0.5;
+our $VERSION=0.6;
 
 =head1 SYNOPSIS
 
@@ -39,8 +39,6 @@ our $VERSION=0.5;
  # direct connection to rtorrent
  my $h = new RTPG(url=>'localhost:5000');
  my $h = new RTPG(url=>'/path/to/socket.rtorrent'); 
-
- die $! unless defined $h;
 
  # arrayref and error (standard version)
  my ($tlist, $error)=$h->torrents_list;
