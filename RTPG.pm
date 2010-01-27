@@ -27,7 +27,7 @@ RTPG - is a module for accessing to rtorrent's SCGI functions.
 
 =cut
 
-our $VERSION=0.6;
+our $VERSION=0.7;
 
 =head1 SYNOPSIS
 
@@ -48,8 +48,8 @@ our $VERSION=0.6;
  
  for (@$tlist)
  {
- 	 my $file_list=$h->file_list($_->{hash});
- 	 ..
+     my $file_list=$h->file_list($_->{hash});
+     ..
  }
 
 
@@ -85,12 +85,12 @@ sub new
     # XML::RPC::Client (standard variant)
     if ($opts{url} =~ m{^\w+://})
     {
-    	my $connect=RPC::XML::Client->new($opts{url});
-    	unless (ref $connect)
-    	{
+        my $connect=RPC::XML::Client->new($opts{url});
+        unless (ref $connect)
+        {
             $!="Error connect to XMLRPC-server: $connect\n";
             return undef;
-    	}
+        }
 
         return bless {
             standard            =>  1,
@@ -101,8 +101,8 @@ sub new
 
     my $connect=RTPG::Direct->new(url => $opts{url});
     return bless {
-    	standard            => 0,
-    	rtorrent_ctl_url    => $opts{url},
+        standard            => 0,
+        rtorrent_ctl_url    => $opts{url},
         connection          => $connect,
     };
 }
@@ -122,34 +122,34 @@ You can use this method for send commands to rtorrent.
 =cut
 sub rpc_command
 {
-	my $self=shift;
-	my ($cmd, @args)=@_;
+    my $self=shift;
+    my ($cmd, @args)=@_;
     my $resp;
 
     $resp=$self->{connection}->send_request($cmd, @args);
 
     if (ref $resp)
     {
-    	if ('RPC::XML::fault' eq ref $resp)
-    	{
-    	    my $err_str=sprintf 
-    	        "Fault when execute command: %s\n" .
-    	        "Fault code: %s\n" .
-    	        "Fault text: %s\n",
-    	        join(' ', $cmd, @args),
-    	        $resp->value->{faultString},
-    	        $resp->value->{faultCode};
-    	    die $err_str unless wantarray;
-    	    return (undef, $err_str);
-    	}
-    	return $resp->value unless wantarray;
-    	return $resp->value, '';
+        if ('RPC::XML::fault' eq ref $resp)
+        {
+            my $err_str=sprintf 
+                "Fault when execute command: %s\n" .
+                "Fault code: %s\n" .
+                "Fault text: %s\n",
+                join(' ', $cmd, @args),
+                $resp->value->{faultString},
+                $resp->value->{faultCode};
+            die $err_str unless wantarray;
+            return (undef, $err_str);
+        }
+        return $resp->value unless wantarray;
+        return $resp->value, '';
     }
     my $err_str=sprintf 
-    	"Fault when execute command: %s\n" .
-    	"Fault text: %s\n",
-    	join(' ', $cmd, @args),
-    	$resp||'';
+        "Fault when execute command: %s\n" .
+        "Fault text: %s\n",
+        join(' ', $cmd, @args),
+        $resp||'';
     die $err_str unless wantarray;
     return undef, $err_str;
 }
@@ -185,21 +185,26 @@ This method returns list of torrents. It is a link to array of hashes.
 =item incomplete
 
 =back
+
 =cut
+
+our $exclude_d_mask = qr{^d\.(get_mode|get_custom.*|get_bitfield)$};
+
 sub torrents_list
 {
     my ($self, $view)=@_;
     $view||='default';
 
+
     my @iary=eval {
-        grep !/^d\.(get_mode|get_custom.*|get_bitfield)$/,
+        grep !/$exclude_d_mask/,
         grep /^d\.(get_|is_)/, $self->_get_list_methods;
     };
 
     if ($@)
     {
-    	return undef, "$@" if wantarray;
-    	die $@;
+        return undef, "$@" if wantarray;
+        die $@;
     }
     my ($list, $error) =
         $self->rpc_command('d.multicall', $view, map { "$_=" } @iary);
@@ -212,12 +217,12 @@ sub torrents_list
 
     for (@$list)
     {
-    	my %info;
+        my %info;
         for my $i (0 .. $#iary)
         {
-        	my $name=$iary[$i];
-        	$name =~ s/^..(?:get_)?//;
-        	$info{$name}=$_->[$i];
+            my $name=$iary[$i];
+            $name =~ s/^..(?:get_)?//;
+            $info{$name}=$_->[$i];
         }
         $_ = _normalize_one_torrent_info(\%info);
     }
@@ -251,15 +256,15 @@ an other information about the torrent.
 =cut
 sub torrent_info
 {
-	my ($self, $id)=@_;
-	my @iary=eval {
-        grep { $_ ne 'd.get_mode' }
+    my ($self, $id)=@_;
+    my @iary=eval {
+        grep !/$exclude_d_mask/,
         grep /^d\.(get_|is_)/, $self->_get_list_methods;
     };
     if ($@)
     {
-    	return undef, "$@" if wantarray;
-    	die $@;
+        return undef, "$@" if wantarray;
+        die $@;
     }
 
     my $info={};
@@ -268,15 +273,15 @@ sub torrent_info
     {
         for my $cmd (@iary)
         {
-    	    my $name=$cmd;
-    	    $name=~s/^..(?:get_)?//;
-    	    $info->{$name}=$self->rpc_command($cmd, $id);
+            my $name=$cmd;
+            $name=~s/^..(?:get_)?//;
+            $info->{$name}=$self->rpc_command($cmd, $id);
         }
     };
     if ($@)
     {
-    	return undef, "$@" if wantarray;
-    	die $@;
+        return undef, "$@" if wantarray;
+        die $@;
     }
     return _normalize_one_torrent_info($info), '' if wantarray;
     return _normalize_one_torrent_info($info);
@@ -299,23 +304,23 @@ about each file that belong to the torrent (tid).
 
 sub file_list
 {
-	my ($self, $id)=@_;
-	croak "TorrentID must be defined!\n" unless $id;
-	my @iary=eval {
+    my ($self, $id)=@_;
+    croak "TorrentID must be defined!\n" unless $id;
+    my @iary=eval {
         grep /^f\.(get|is)/, $self->_get_list_methods;
     };
 
     if ($@)
     {
-    	return undef, "$@" if wantarray;
-    	die $@;
+        return undef, "$@" if wantarray;
+        die $@;
     }
     
     my ($chunk_size, $error)=$self->rpc_command('d.get_chunk_size', $id);
     unless (defined $chunk_size)
     {
-    	die $error unless wantarray;
-    	return undef, $error;
+        die $error unless wantarray;
+        return undef, $error;
     }
 
     my $list;
@@ -324,18 +329,18 @@ sub file_list
         $self->rpc_command('f.multicall', $id, '', map { "$_=" } @iary);
     unless (defined $list)
     {
-    	die $error unless wantarray;
-    	return undef, $error;
+        die $error unless wantarray;
+        return undef, $error;
     }
 
     for (@$list)
     {
-    	my %info;
+        my %info;
         for my $i (0 .. $#iary)
         {
-        	my $name=$iary[$i];
-        	$name =~ s/^..(?:get_)?//;
-        	$info{$name}=$_->[$i];
+            my $name=$iary[$i];
+            $name =~ s/^..(?:get_)?//;
+            $info{$name}=$_->[$i];
         }
         $_ =  \%info;
         my $size_bytes=1.0*$chunk_size*$_->{size_chunks};
@@ -394,26 +399,26 @@ the version of librtorrent.
 =cut
 sub system_information
 {
-	my $self=shift;
+    my $self=shift;
 
     my $lv;
-	my ($rv, $err)=$self->rpc_command('system.client_version');
-	($lv, $err)=$self->rpc_command('system.library_version') if defined $rv;
+    my ($rv, $err)=$self->rpc_command('system.client_version');
+    ($lv, $err)=$self->rpc_command('system.library_version') if defined $rv;
 
-	unless (defined $lv)
-	{
-		return undef, $err if wantarray;
-		die $err;
-	}
-	
-	my $res=
-	{
-		client_version      => $rv,
-		library_version     => $lv,
-	};
+    unless (defined $lv)
+    {
+        return undef, $err if wantarray;
+        die $err;
+    }
+    
+    my $res=
+    {
+        client_version      => $rv,
+        library_version     => $lv,
+    };
 
-	return $res, '' if wantarray;
-	return $res;
+    return $res, '' if wantarray;
+    return $res;
 }
 
 =head1 PRIVATE METHODS
@@ -426,10 +431,10 @@ returns list of rtorrent commands
 
 sub _get_list_methods
 {
-	my $self=shift;
-	return @{ $self->{listMethods} } if $self->{listMethods};
-	my $list = $self->rpc_command('system.listMethods');
-	return @$list;
+    my $self=shift;
+    return @{ $self->{listMethods} } if $self->{listMethods};
+    my $list = $self->rpc_command('system.listMethods');
+    return @$list;
 }
 
 =head2 _get_percent_string(PART_OF_VALUE,VALUE)
@@ -439,23 +444,23 @@ counts percent by pair values
 =cut
 sub _get_percent_string($$)
 {
-	my ($part, $full)=@_;
-	return undef unless $full;
-	return undef unless defined $part;
-	return undef if $part<0;
-	return undef if $full<0;
-	return undef if $part>$full;
-	my $percent=$part*100/$full;
-	if ($percent<10)
-	{
-		$percent=sprintf '%1.2f', $percent;
-	}
-	else
-	{
-		$percent=sprintf '%1.1f', $percent;
-	}
-	s/(?<=\.\d)0$//, s/\.00?$// for $percent;
-	return "$percent%";
+    my ($part, $full)=@_;
+    return undef unless $full;
+    return undef unless defined $part;
+    return undef if $part<0;
+    return undef if $full<0;
+    return undef if $part>$full;
+    my $percent=$part*100/$full;
+    if ($percent<10)
+    {
+        $percent=sprintf '%1.2f', $percent;
+    }
+    else
+    {
+        $percent=sprintf '%1.1f', $percent;
+    }
+    s/(?<=\.\d)0$//, s/\.00?$// for $percent;
+    return "$percent%";
 }
 
 =head2 _human_size(NUM)
@@ -465,31 +470,31 @@ converts big numbers to small 1024 = 1K, 1024**2 == 1M, etc
 =cut
 sub _human_size($)
 {
-	my ($size, $sign)=(shift, 1);
-	if ($size<0) { return '>2G'; }
-	return 0 unless $size;
-	my @suffixes=('', 'K', 'M', 'G', 'T', 'P', 'E');
-	my ($limit, $div)=(1024, 1);
+    my ($size, $sign)=(shift, 1);
+    if ($size<0) { return '>2G'; }
+    return 0 unless $size;
+    my @suffixes=('', 'K', 'M', 'G', 'T', 'P', 'E');
+    my ($limit, $div)=(1024, 1);
     for (@suffixes)
     {
-    	if ($size<$limit || $_ eq $suffixes[-1])
-    	{
+        if ($size<$limit || $_ eq $suffixes[-1])
+        {
             $size = $sign*$size/$div;
             if ($size<10)
             {
-            	$size=sprintf "%1.2f", $size;
+                $size=sprintf "%1.2f", $size;
             }
             elsif ($size<50)
             {
-            	$size=sprintf "%1.1f", $size;
+                $size=sprintf "%1.1f", $size;
             }
             else
             {
-            	$size=int($size);
+                $size=int($size);
             }
             s/(?<=\.\d)0$//, s/\.00?$// for $size;
             return "$size$_";
-    	}
+        }
         $div = $limit;
         $limit *= 1024;
     }
@@ -514,10 +519,10 @@ human_up_total, human_up_rate, human_down_rate
 
 sub _normalize_one_torrent_info($)
 {
-	my ($info)=@_;
+    my ($info)=@_;
 
-	for ($info)
-	{
+    for ($info)
+    {
         $_->{percent} = _get_percent_string(
             $_->{completed_chunks},
             $_->{size_chunks}
@@ -547,8 +552,8 @@ sub _normalize_one_torrent_info($)
             next if $_ eq 0;
             $_ .= 'B/s';
         }
-	}
-	return $info;
+    }
+    return $info;
 }
 
 1;
