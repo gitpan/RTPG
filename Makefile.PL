@@ -15,6 +15,7 @@ WriteMakefile(
         'RPC::XML::Client'  => 0,
         'RPC::XML'          => 0,
         'RPC::XML::Parser'  => 0,
+        'MIME::Types'       => 0,
         Encode              => 0,
     },
 );

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               RTPG
-version:            0.7
+version:            0.9
 abstract:           is a module for accessing to rtorrent's SCGI functions.
 author:
     - Dmitry E. Oboukhov <unera@debian.org>
@@ -13,6 +13,7 @@ build_requires:
 requires:
     Carp:              0
     Encode:            0
+    MIME::Types:       0
     RPC::XML:          0
     RPC::XML::Client:  0
     RPC::XML::Parser:  0

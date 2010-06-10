@@ -10,3 +10,7 @@
 
 0.5
     API XML::Parser was changed, fixed.
+
+0.9
+    Added a few new commands.
+    Enabled support for non-latin symbols in rpc_command.
