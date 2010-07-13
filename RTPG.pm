@@ -11,6 +11,8 @@ use RPC::XML::Client;
 use RPC::XML;
 use MIME::Types;
 
+use Fcntl qw(:flock);
+
 # international symbols in our commands
 $RPC::XML::ENCODING = "UTF-8";
 
@@ -22,11 +24,11 @@ RTPG - is a module for accessing to rtorrent's SCGI functions.
 
 =head1 VERSION
 
-0.91
+0.92
 
 =cut
 
-our $VERSION=0.91;
+our $VERSION=0.92;
 
 =head1 SYNOPSIS
 
@@ -73,6 +75,10 @@ The constructor. It receives the next options:
 
 is an address of rtorrent's SCGI (direct) or rtorrent's RPC (standard).
 
+=item B<queue>
+
+if TRUE, commands will process in queue mode (use flock).
+
 =back
 
 =cut
@@ -95,7 +101,8 @@ sub new
         return bless {
             standard            =>  1,
             rtorrent_ctl_url    =>  $opts{url},
-            connection          =>  $connect
+            connection          =>  $connect,
+            queue_mode          =>  $opts{queue} || 0,
         }, $class;
     }
 
@@ -104,6 +111,7 @@ sub new
         standard            => 0,
         rtorrent_ctl_url    => $opts{url},
         connection          => $connect,
+        queue_mode          => $opts{queue} || 0,
     };
 }
 
@@ -127,7 +135,9 @@ sub rpc_command
     my ($cmd, @args)=@_;
     my $resp;
 
+    flock DATA, LOCK_EX if $self->{queue_mode};
     $resp=$self->{connection}->send_request($cmd, @args);
+    flock DATA, LOCK_UN if $self->{queue_mode};
 
     if (ref $resp)
     {
@@ -544,26 +554,30 @@ the version of librtorrent.
 
 sub system_information
 {
-    my $self=shift;
+    my $self = shift;
 
-    my $lv;
-    my ($rv, $err)=$self->rpc_command('system.client_version');
-    ($lv, $err)=$self->rpc_command('system.library_version') if defined $rv;
+    my @info_params = qw(client_version library_version);
 
-    unless (defined $lv)
-    {
-        return undef, $err if wantarray;
-        die $err;
+    my ($res, $err) = $self->rpc_command(
+        'system.multicall', [
+            map { { methodName => "system.$_", params => [] } } @info_params
+        ]
+    );
+
+    if ($err) {
+        die $err unless wantarray;
+        return (undef, $err);
     }
 
-    my $res=
-    {
-        client_version      => $rv,
-        library_version     => $lv,
-    };
 
-    return $res, '' if wantarray;
-    return $res;
+    my %res;
+
+    for (0 .. $#info_params) {
+        $res{ $info_params[$_] } = $res->[$_][0];
+    }
+
+    return \%res, '' if wantarray;
+    return \%res;
 }
 
 =head2 view_list([ARGS])
@@ -1112,3 +1126,6 @@ You should have received a copy of the GNU  General  Public  License  along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
+
+__DATA__
+this is lock for this module
